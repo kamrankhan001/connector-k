@@ -24,7 +24,9 @@ const submit = () => {
     <GuestLayout>
         <Head title="Register" />
 
-        <form @submit.prevent="submit">
+        <div>
+            <h2 class="text-3xl font-medium text-gray-900 text-center">Register</h2>
+            <form @submit.prevent="submit" class="p-14">
             <div>
                 <InputLabel for="name" value="Name" />
 
@@ -109,5 +111,7 @@ const submit = () => {
                 </PrimaryButton>
             </div>
         </form>
+        </div>
+
     </GuestLayout>
 </template>
