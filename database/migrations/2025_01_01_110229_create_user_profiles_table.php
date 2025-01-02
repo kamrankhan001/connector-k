@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('education');
             $table->string('language');
             $table->string('skills');
+            $table->string('image');
             $table->timestamps();
         });
     }
