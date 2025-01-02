@@ -8,6 +8,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use App\Http\Requests\UserMatchingProfileRequest;
+use App\Models\UserProfile;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,6 +22,7 @@ class ProfileController extends Controller
     {
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'userProfile' => $request->user()->profile,
             'status' => session('status'),
         ]);
     }
@@ -59,5 +62,28 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    public function save(UserMatchingProfileRequest $request, UserProfile $userProfile = null)
+    {
+        // If a profile is passed, update; otherwise, create a new one.
+        if ($userProfile) {
+            // Ensure the authenticated user owns the profile
+            if ($userProfile->user_id !== Auth::id()) {
+                abort(403, 'Unauthorized action.');
+            }
+
+            $userProfile->update($request->validated());
+
+            return redirect()->back()->with('success', 'Profile updated successfully.');
+        } else {
+            // Create a new profile
+            $data = $request->validated();
+            $data['user_id'] = Auth::id();
+
+            UserProfile::create($data);
+
+            return redirect()->back()->with('success', 'Profile created successfully.');
+        }
     }
 }
