@@ -9,13 +9,15 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         // Get the currently authenticated user
         $currentUser = Auth::user();
-
-        // Fetch the current user's profile
         $currentUserProfile = $currentUser->profile;
+
+        // Get the search query and gender filter from the request (if any)
+        $searchQuery = $request->get('search', '');
+        $filterGender = $request->get('filterGender', 'both'); // Default to 'both' if not provided
 
         // Find like-minded profiles (users with shared data)
         $likeMindedProfiles = UserProfile::where('id', '!=', $currentUserProfile->id)
@@ -24,6 +26,14 @@ class DashboardController extends Controller
                     ->where('hobbies', $currentUserProfile->hobbies)
                     ->orWhere('language', $currentUserProfile->language)
                     ->orWhere('skills', $currentUserProfile->skills);
+            })
+            ->whereHas('user', function ($query) use ($searchQuery, $filterGender) {
+                if ($searchQuery) {
+                    $query->where('name', 'like', "%{$searchQuery}%");
+                }
+                if ($filterGender !== 'both') {
+                    $query->where('gender', $filterGender);
+                }
             })
             ->take(10) // Limit to 10 matches
             ->with('user') // Include user data for displaying

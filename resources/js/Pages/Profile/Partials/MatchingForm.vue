@@ -7,6 +7,7 @@
     import {
         useForm
     } from '@inertiajs/vue3';
+    import { ref } from 'vue';
 
     const props = defineProps({
         userProfile: {
@@ -26,7 +27,12 @@
         education: props.userProfile?.education || '',
         language: props.userProfile?.language || '',
         skills: props.userProfile?.skills || '',
+        gender: props.userProfile?.gender || '',
+        image: null,
     });
+
+    // Add a method to handle image selection
+    const imageInput = ref(null);
 
     // Handle form submission
     const submitForm = () => {
@@ -142,6 +148,24 @@
                 <TextInput id="skills" type="text" class="mt-1 block w-full" v-model="form.skills" required
                     autocomplete="skills" />
                 <InputError class="mt-2" :message="form.errors.skills" />
+            </div>
+
+            <!-- Gender Field -->
+            <div>
+                <InputLabel for="gender" value="Gender" />
+                <select id="gender" v-model="form.gender" class="mt-1 block w-full">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+                <InputError class="mt-2" :message="form.errors.gender" />
+            </div>
+
+            <!-- Image Field -->
+            <div>
+                <InputLabel for="image" value="Profile Image" />
+                <input type="file" ref="imageInput" id="image" class="mt-1 block w-full"
+                    @change="form.image = imageInput.value.files[0]" />
+                <InputError class="mt-2" :message="form.errors.image" />
             </div>
 
             <!-- Save Button -->

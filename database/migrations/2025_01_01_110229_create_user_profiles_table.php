@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('hobbies');
             $table->string('occupation');
             $table->integer('age');
+            $table->enum('gender', ['male', 'female']);
             $table->string('education');
             $table->string('language');
             $table->string('skills');

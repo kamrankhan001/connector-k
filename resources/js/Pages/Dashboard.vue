@@ -1,21 +1,15 @@
 <script setup>
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import {
-        Head,
-        useForm,
-        usePage,
-    } from '@inertiajs/vue3';
-    import {
-        ref
-    } from 'vue';
+    import { Head, useForm, usePage } from '@inertiajs/vue3';
+    import { ref, computed } from 'vue';
 
     const props = defineProps({
         likeMinded: {
-            type: Object,
+            type: Array,
             required: true,
         },
         friendRequests: {
-            type: Object,
+            type: Array,
             required: true,
         },
     });
@@ -28,12 +22,25 @@
         request_id: null,
     });
 
-
-    const {
-        props: pageProps
-    } = usePage();
+    const { props: pageProps } = usePage();
 
     const filterGender = ref('both');
+    const searchQuery = ref('');  // For search term
+
+    // Computed property to filter users based on both gender and search query
+    const filteredUsers = computed(() => {
+        return props.likeMinded.filter(user => {
+            // Filter by gender
+            const matchesGender =
+                filterGender.value === 'both' || user.user.gender === filterGender.value;
+
+            // Filter by search query (case insensitive)
+            const matchesSearch =
+                user.user.name.toLowerCase().includes(searchQuery.value.toLowerCase());
+
+            return matchesGender && matchesSearch;
+        });
+    });
 
     const sendRequest = (receiverId) => {
         requestSendForm.receiver_id = receiverId;
@@ -56,17 +63,14 @@
                 alert('Friend request accepted successfully.');
             },
             onError: () => {
-                alert('An error occurred while accepted the friend request.');
+                alert('An error occurred while accepting the friend request.');
             },
         });
     };
-
 </script>
 
 <template>
-
     <Head title="Timeline" />
-
     <AuthenticatedLayout>
         <div class="h-screen grid grid-cols-1 md:grid-cols-4 container mx-auto">
             <!-- Left Column: Requests Section -->
@@ -80,9 +84,9 @@
                             <img :src="request.sender.profile_image || 'https://via.placeholder.com/40x40.png'"
                                 alt="User Image" class="w-10 h-10 rounded-full" />
                             <div>
-                                <p class="text-gray-800 font-semibold">{{ request . sender . name }}</p>
+                                <p class="text-gray-800 font-semibold">{{ request.sender.name }}</p>
                                 <p class="text-sm text-gray-600">Sent
-                                    {{ new Date(request . created_at) . toLocaleString() }}</p>
+                                    {{ new Date(request.created_at).toLocaleString() }}</p>
                             </div>
                         </div>
                         <button @click="acceptRequest(request.id)"
@@ -100,7 +104,7 @@
                 <!-- Search Bar -->
                 <section class="py-5 w-full max-w-lg">
                     <div class="relative">
-                        <input type="search" name="search" id="search" placeholder="Search..."
+                        <input type="search" v-model="searchQuery" name="search" id="search" placeholder="Search..."
                             class="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         <svg xmlns="http://www.w3.org/2000/svg"
                             class="absolute top-1/2 left-3 transform -translate-y-1/2 h-5 w-5 text-gray-400"
@@ -111,13 +115,13 @@
                     </div>
                 </section>
 
-                <!-- User Card -->
+                <!-- User Cards -->
                 <section class="my-5 w-full max-w-lg overflow-y-scroll" style="max-height: 80vh;">
-                    <div v-for="individual in likeMinded" :key="individual.id"
+                    <div v-for="individual in filteredUsers" :key="individual.id"
                         class="bg-white shadow-lg rounded-lg overflow-hidden max-w-lg mx-auto mb-6">
                         <div class="p-6 border-b border-gray-200">
                             <a href="#" class="text-2xl font-semibold text-gray-800 hover:no-underline">
-                                {{ individual . user . name }}
+                                {{ individual.user.name }}
                             </a>
                         </div>
                         <div class="p-5">
@@ -133,19 +137,17 @@
                             </form>
                         </div>
                     </div>
-
                 </section>
             </div>
 
             <!-- Right Column: Filters Section -->
             <div class="bg-gray-100 p-6 border-l hidden md:block">
                 <div class="text-xl font-semibold text-gray-800 mb-4">Filters</div>
-                <!-- Filters -->
                 <div class="space-y-4 p-4 border rounded-lg shadow-md bg-white max-w-sm">
                     <h2 class="text-lg font-semibold text-gray-800">Select People</h2>
                     <div>
                         <div class="flex items-center">
-                            <input type="radio" name="category" id="both" value="Both" v-model="filterGender"
+                            <input type="radio" name="category" id="both" value="both" v-model="filterGender"
                                 checked
                                 class="mr-3 w-5 h-5 text-blue-500 border-gray-300 focus:ring-blue-400 focus:ring-2 rounded" />
                             <label for="both" class="text-gray-700 font-medium hover:text-blue-500 cursor-pointer">
@@ -153,14 +155,14 @@
                             </label>
                         </div>
                         <div class="flex items-center">
-                            <input type="radio" name="category" id="male" value="Male" v-model="filterGender"
+                            <input type="radio" name="category" id="male" value="male" v-model="filterGender"
                                 class="mr-3 w-5 h-5 text-blue-500 border-gray-300 focus:ring-blue-400 focus:ring-2 rounded" />
                             <label for="male" class="text-gray-700 font-medium hover:text-blue-500 cursor-pointer">
                                 Male
                             </label>
                         </div>
                         <div class="flex items-center">
-                            <input type="radio" name="category" id="female" value="Female" v-model="filterGender"
+                            <input type="radio" name="category" id="female" value="female" v-model="filterGender"
                                 class="mr-3 w-5 h-5 text-blue-500 border-gray-300 focus:ring-blue-400 focus:ring-2 rounded" />
                             <label for="female" class="text-gray-700 font-medium hover:text-blue-500 cursor-pointer">
                                 Female
@@ -174,7 +176,6 @@
                     </div>
                 </div>
             </div>
-
         </div>
     </AuthenticatedLayout>
 </template>

@@ -66,22 +66,31 @@ class ProfileController extends Controller
 
     public function save(UserMatchingProfileRequest $request, UserProfile $userProfile = null)
     {
-        // If a profile is passed, update; otherwise, create a new one.
+        // Validate incoming request
+        $validated = $request->validated();
+
+        // If an image was uploaded, store it in the 'profile-images' directory
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('profile-images', 'public');
+            $validated['image'] = $imagePath;
+        }
+
+        // If a profile is passed, update it; otherwise, create a new one
         if ($userProfile) {
             // Ensure the authenticated user owns the profile
             if ($userProfile->user_id !== Auth::id()) {
                 abort(403, 'Unauthorized action.');
             }
 
-            $userProfile->update($request->validated());
+            // Update the profile with validated data
+            $userProfile->update($validated);
 
             return redirect()->back()->with('success', 'Profile updated successfully.');
         } else {
-            // Create a new profile
-            $data = $request->validated();
-            $data['user_id'] = Auth::id();
+            // Create a new profile with validated data
+            $validated['user_id'] = Auth::id();
 
-            UserProfile::create($data);
+            UserProfile::create($validated);
 
             return redirect()->back()->with('success', 'Profile created successfully.');
         }
