@@ -31,7 +31,7 @@ class UserProfileFactory extends Factory
             'education' => $this->faker->randomElement(['High School', 'Bachelor', 'Master', 'PhD']),
             'language' => $this->faker->randomElement($languages),
             'skills' => $this->faker->randomElement($skills),
-            'image' => $this->faker->imageUrl(200, 200, 'people'), // Generate placeholder image
+            'image' => $this->faker->imageUrl(600, 900, 'people'), // Generate placeholder image
         ];
     }
 }

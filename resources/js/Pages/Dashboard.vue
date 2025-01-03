@@ -1,9 +1,66 @@
 <script setup>
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import { Head } from '@inertiajs/vue3';
-    import { ref } from 'vue';
+    import {
+        Head,
+        useForm,
+        usePage,
+    } from '@inertiajs/vue3';
+    import {
+        ref
+    } from 'vue';
+
+    const props = defineProps({
+        likeMinded: {
+            type: Object,
+            required: true,
+        },
+        friendRequests: {
+            type: Object,
+            required: true,
+        },
+    });
+
+    const requestSendForm = useForm({
+        receiver_id: null,
+    });
+
+    const requestAcceptForm = useForm({
+        request_id: null,
+    });
+
+
+    const {
+        props: pageProps
+    } = usePage();
 
     const filterGender = ref('both');
+
+    const sendRequest = (receiverId) => {
+        requestSendForm.receiver_id = receiverId;
+
+        requestSendForm.post(route('friend-request.send'), {
+            onSuccess: () => {
+                alert('Friend request sent successfully.');
+            },
+            onError: () => {
+                alert('An error occurred while sending the friend request.');
+            },
+        });
+    };
+
+    const acceptRequest = (request_id) => {
+        requestAcceptForm.request_id = request_id;
+
+        requestAcceptForm.post(route('friend-requests.accept'), {
+            onSuccess: () => {
+                alert('Friend request accepted successfully.');
+            },
+            onError: () => {
+                alert('An error occurred while accepted the friend request.');
+            },
+        });
+    };
+
 </script>
 
 <template>
@@ -16,31 +73,26 @@
             <div class="bg-gray-100 p-6 border-r hidden md:block">
                 <div class="text-xl font-semibold text-gray-800 mb-4">Requests You Receive</div>
                 <!-- Request items -->
-                <ul class="space-y-4">
-                    <li class="bg-white p-4 rounded-lg shadow-md flex items-center space-x-4">
-                        <img src="https://via.placeholder.com/40x40.png" alt="User Image" class="w-10 h-10 rounded-full" />
-                        <div>
-                            <p class="text-gray-800 font-semibold">John Doe</p>
-                            <p class="text-sm text-gray-600">2 hours ago</p>
+                <ul v-if="friendRequests.length > 0" class="space-y-4">
+                    <li v-for="request in friendRequests" :key="request.id"
+                        class="bg-white p-4 rounded-lg shadow-md flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <img :src="request.sender.profile_image || 'https://via.placeholder.com/40x40.png'"
+                                alt="User Image" class="w-10 h-10 rounded-full" />
+                            <div>
+                                <p class="text-gray-800 font-semibold">{{ request . sender . name }}</p>
+                                <p class="text-sm text-gray-600">Sent
+                                    {{ new Date(request . created_at) . toLocaleString() }}</p>
+                            </div>
                         </div>
-                    </li>
-                    <li class="bg-white p-4 rounded-lg shadow-md flex items-center space-x-4">
-                        <img src="https://via.placeholder.com/40x40.png" alt="User Image"
-                            class="w-10 h-10 rounded-full" />
-                        <div>
-                            <p class="text-gray-800 font-semibold">Jane Smith</p>
-                            <p class="text-sm text-gray-600">1 day ago</p>
-                        </div>
-                    </li>
-                    <li class="bg-white p-4 rounded-lg shadow-md flex items-center space-x-4">
-                        <img src="https://via.placeholder.com/40x40.png" alt="User Image"
-                            class="w-10 h-10 rounded-full" />
-                        <div>
-                            <p class="text-gray-800 font-semibold">Bob Johnson</p>
-                            <p class="text-sm text-gray-600">3 days ago</p>
-                        </div>
+                        <button @click="acceptRequest(request.id)"
+                            class="inline-flex items-center p-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            Accept
+                        </button>
                     </li>
                 </ul>
+                <p v-else class="bg-white p-4 rounded-lg shadow-md text-center text-gray-600">No friend requests you
+                    have yet.</p>
             </div>
 
             <!-- Middle Column: Your Content (Search and User Card) -->
@@ -60,22 +112,28 @@
                 </section>
 
                 <!-- User Card -->
-                <section class="my-5 w-full max-w-lg">
-                    <div class="bg-white shadow-lg rounded-lg overflow-hidden max-w-lg mx-auto">
+                <section class="my-5 w-full max-w-lg overflow-y-scroll" style="max-height: 80vh;">
+                    <div v-for="individual in likeMinded" :key="individual.id"
+                        class="bg-white shadow-lg rounded-lg overflow-hidden max-w-lg mx-auto mb-6">
                         <div class="p-6 border-b border-gray-200">
-                            <a href="#" class="text-2xl font-semibold text-gray-800 hover:no-underline">Name</a>
+                            <a href="#" class="text-2xl font-semibold text-gray-800 hover:no-underline">
+                                {{ individual . user . name }}
+                            </a>
                         </div>
                         <div class="p-5">
-                            <img src="https://via.placeholder.com/600x900.png" alt="User Image"
+                            <img :src="individual.image" alt="User Image"
                                 class="w-full h-96 object-cover rounded-lg mb-6" />
                         </div>
                         <div class="px-6 py-4">
-                            <a href="#"
-                                class="inline-flex items-center p-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                Send Request
-                            </a>
+                            <form>
+                                <button @click.prevent="sendRequest(individual.id)"
+                                    class="inline-flex items-center p-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    Send Request
+                                </button>
+                            </form>
                         </div>
                     </div>
+
                 </section>
             </div>
 
@@ -87,7 +145,8 @@
                     <h2 class="text-lg font-semibold text-gray-800">Select People</h2>
                     <div>
                         <div class="flex items-center">
-                            <input type="radio" name="category" id="both" value="Both" v-model="filterGender" checked
+                            <input type="radio" name="category" id="both" value="Both" v-model="filterGender"
+                                checked
                                 class="mr-3 w-5 h-5 text-blue-500 border-gray-300 focus:ring-blue-400 focus:ring-2 rounded" />
                             <label for="both" class="text-gray-700 font-medium hover:text-blue-500 cursor-pointer">
                                 Both

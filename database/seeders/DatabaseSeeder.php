@@ -22,19 +22,5 @@ class DatabaseSeeder extends Seeder
             $user->profile()->create(UserProfile::factory()->make()->toArray());
         });
 
-        // Ensure each user has at least 10 matches
-        // $profiles = UserProfile::all();
-        // $profiles->each(function ($profile) use ($profiles) {
-        //     // Find 10 matches with similar fields
-        //     $matches = $profiles
-        //         ->where('id', '!=', $profile->id)
-        //         ->filter(function ($otherProfile) use ($profile) {
-        //             return $otherProfile->hobbies === $profile->hobbies || $otherProfile->language === $profile->language || $otherProfile->skills === $profile->skills;
-        //         })
-        //         ->take(10);
-
-        //     // Save matches or log them (depending on your implementation)
-        //     $profile->matches = $matches; // Example field for demonstration
-        // });
     }
 }
