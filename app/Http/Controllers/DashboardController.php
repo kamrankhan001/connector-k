@@ -31,6 +31,8 @@ class DashboardController extends Controller
                 if ($searchQuery) {
                     $query->where('name', 'like', "%{$searchQuery}%");
                 }
+            })
+            ->where(function ($query) use ($filterGender) {
                 if ($filterGender !== 'both') {
                     $query->where('gender', $filterGender);
                 }
@@ -40,7 +42,7 @@ class DashboardController extends Controller
             ->get();
 
         // Fetch friend requests where the logged-in user is the receiver
-        $friendRequests = FriendRequest::with('sender')
+        $friendRequests = FriendRequest::with('sender.profile')
             ->where('receiver_id', $currentUser->id)
             ->where('accepted', false)
             ->get();
@@ -49,6 +51,7 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'likeMinded' => $likeMindedProfiles,
             'friendRequests' => $friendRequests,
+            'filterGender' => $filterGender,
         ]);
     }
 

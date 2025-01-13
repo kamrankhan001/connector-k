@@ -1,7 +1,14 @@
 <script setup>
     import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-    import { Head, useForm, usePage } from '@inertiajs/vue3';
-    import { ref, computed } from 'vue';
+    import {
+        Head,
+        useForm,
+        usePage
+    } from '@inertiajs/vue3';
+    import {
+        ref,
+        computed,
+    } from 'vue';
 
     const props = defineProps({
         likeMinded: {
@@ -12,7 +19,13 @@
             type: Array,
             required: true,
         },
+        filterGender: {
+            type: String,
+            required: true, // Add this to make sure filterGender is passed as a prop
+        },
     });
+
+    console.log(props.friendRequests[0].sender.profile);
 
     const requestSendForm = useForm({
         receiver_id: null,
@@ -22,17 +35,20 @@
         request_id: null,
     });
 
-    const { props: pageProps } = usePage();
+    const {
+        props: pageProps
+    } = usePage();
 
-    const filterGender = ref('both');
-    const searchQuery = ref('');  // For search term
+    const filterGender = ref(pageProps.filterGender || 'both'); // Initialize with the passed prop value
+    const searchQuery = ref(''); // For search term
 
     // Computed property to filter users based on both gender and search query
     const filteredUsers = computed(() => {
         return props.likeMinded.filter(user => {
+
             // Filter by gender
             const matchesGender =
-                filterGender.value === 'both' || user.user.gender === filterGender.value;
+                filterGender.value === 'both' || user.gender === filterGender.value;
 
             // Filter by search query (case insensitive)
             const matchesSearch =
@@ -70,27 +86,29 @@
 </script>
 
 <template>
+
     <Head title="Timeline" />
     <AuthenticatedLayout>
         <div class="h-screen grid grid-cols-1 md:grid-cols-4 container mx-auto">
             <!-- Left Column: Requests Section -->
             <div class="bg-gray-100 p-6 border-r hidden md:block">
                 <div class="text-xl font-semibold text-gray-800 mb-4">Requests You Receive</div>
-                <!-- Request items -->
                 <ul v-if="friendRequests.length > 0" class="space-y-4">
                     <li v-for="request in friendRequests" :key="request.id"
                         class="bg-white p-4 rounded-lg shadow-md flex items-center justify-between">
                         <div class="flex items-center space-x-4">
-                            <img :src="request.sender.profile_image || 'https://via.placeholder.com/40x40.png'"
+                            <!-- <img :src="'/storage/' + request.sender.profile.image || 'https://via.placeholder.com/40x40.png'"
+                                alt="User Image" class="w-10 h-10 rounded-full" /> -->
+                                <img src='https://via.placeholder.com/40x40.png'
                                 alt="User Image" class="w-10 h-10 rounded-full" />
                             <div>
-                                <p class="text-gray-800 font-semibold">{{ request.sender.name }}</p>
+                                <p class="text-gray-800 font-semibold">{{ request . sender . name }}</p>
                                 <p class="text-sm text-gray-600">Sent
-                                    {{ new Date(request.created_at).toLocaleString() }}</p>
+                                    {{ new Date(request . created_at) . toLocaleString() }}</p>
                             </div>
                         </div>
                         <button @click="acceptRequest(request.id)"
-                            class="inline-flex items-center p-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                            class="inline-flex items-center p-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
                             Accept
                         </button>
                     </li>
@@ -104,7 +122,8 @@
                 <!-- Search Bar -->
                 <section class="py-5 w-full max-w-lg">
                     <div class="relative">
-                        <input type="search" v-model="searchQuery" name="search" id="search" placeholder="Search..."
+                        <input type="search" v-model="searchQuery" name="search" id="search"
+                            placeholder="Search..."
                             class="w-full py-2 pl-10 pr-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                         <svg xmlns="http://www.w3.org/2000/svg"
                             class="absolute top-1/2 left-3 transform -translate-y-1/2 h-5 w-5 text-gray-400"
@@ -116,16 +135,18 @@
                 </section>
 
                 <!-- User Cards -->
-                <section class="my-5 w-full max-w-lg overflow-y-scroll" style="max-height: 80vh;">
+                <section class="my-5 w-full max-w-lg overflow-y-scroll" style="max-height: 80vh;" id="main-section">
                     <div v-for="individual in filteredUsers" :key="individual.id"
                         class="bg-white shadow-lg rounded-lg overflow-hidden max-w-lg mx-auto mb-6">
                         <div class="p-6 border-b border-gray-200">
                             <a href="#" class="text-2xl font-semibold text-gray-800 hover:no-underline">
-                                {{ individual.user.name }}
+                                {{ individual . user . name }}
                             </a>
                         </div>
                         <div class="p-5">
-                            <img :src="individual.image" alt="User Image"
+                            <!-- <img :src="'/storage/' + individual.image" alt="User Image"
+                                class="w-full h-96 object-cover rounded-lg mb-6" /> -->
+                                <img :src="individual.image" alt="User Image"
                                 class="w-full h-96 object-cover rounded-lg mb-6" />
                         </div>
                         <div class="px-6 py-4">
@@ -148,7 +169,6 @@
                     <div>
                         <div class="flex items-center">
                             <input type="radio" name="category" id="both" value="both" v-model="filterGender"
-                                checked
                                 class="mr-3 w-5 h-5 text-blue-500 border-gray-300 focus:ring-blue-400 focus:ring-2 rounded" />
                             <label for="both" class="text-gray-700 font-medium hover:text-blue-500 cursor-pointer">
                                 Both
@@ -169,13 +189,43 @@
                             </label>
                         </div>
                     </div>
-                    <div class="mt-4 text-gray-800">
-                        <p class="font-medium">
-                            Selected: <span id="selected-category" class="text-blue-600">{{ filterGender }}</span>
-                        </p>
-                    </div>
                 </div>
             </div>
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+    /* Style the scrollbar for the section with ID main-section */
+    #main-section::-webkit-scrollbar {
+        width: 8px;
+        /* Width of the scrollbar */
+    }
+
+    #main-section::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        /* Background of the scrollbar track */
+        border-radius: 4px;
+        /* Rounded corners for the track */
+    }
+
+    #main-section::-webkit-scrollbar-thumb {
+        background: #ffffff;
+        /* Color of the scrollbar thumb */
+        border-radius: 4px;
+        /* Rounded corners for the thumb */
+    }
+
+    #main-section::-webkit-scrollbar-thumb:hover {
+        background: #1d2e57;
+        /* Darker color on hover */
+    }
+
+    /* For Firefox */
+    #main-section {
+        scrollbar-width: thin;
+        /* Use a thin scrollbar */
+        scrollbar-color: #ffffff #f1f1f1;
+        /* Thumb and track colors */
+    }
+</style>

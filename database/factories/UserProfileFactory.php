@@ -32,7 +32,7 @@ class UserProfileFactory extends Factory
             'language' => $this->faker->randomElement($languages),
             'skills' => $this->faker->randomElement($skills),
             'gender' => $this->faker->randomElement(['male', 'female']),
-            'image' => $this->faker->imageUrl(600, 900, 'people'), // Generate placeholder image
+            'image' => 'https://picsum.photos/600/900?random=' . $this->faker->unique()->numberBetween(1, 100000),
         ];
     }
 }

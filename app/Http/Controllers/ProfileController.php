@@ -83,7 +83,7 @@ class ProfileController extends Controller
             }
 
             // Update the profile with validated data
-            $userProfile->update($validated);
+            $something = $userProfile->update($validated);
 
             return redirect()->back()->with('success', 'Profile updated successfully.');
         } else {

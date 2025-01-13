@@ -32,6 +32,8 @@ class UserMatchingProfileRequest extends FormRequest
             'education' => 'required|string|max:255',
             'language' => 'required|string|max:255',
             'skills' => 'required|string|max:255',
+            'gender' => 'required|string|max:25',
+            'image' => 'required|image|max:2048',
         ];
     }
 }

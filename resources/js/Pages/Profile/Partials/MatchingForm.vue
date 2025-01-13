@@ -1,59 +1,77 @@
 <script setup>
-    import InputError from '@/Components/InputError.vue';
-    import InputLabel from '@/Components/InputLabel.vue';
-    import PrimaryButton from '@/Components/PrimaryButton.vue';
-    import TextInput from '@/Components/TextInput.vue';
-    import NumberInput from '@/Components/NumberInput.vue';
-    import {
-        useForm
-    } from '@inertiajs/vue3';
-    import { ref } from 'vue';
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import TextInput from '@/Components/TextInput.vue';
+import NumberInput from '@/Components/NumberInput.vue';
+import {
+    useForm,
+    router,
+} from '@inertiajs/vue3';
+import {
+    ref
+} from 'vue';
 
-    const props = defineProps({
-        userProfile: {
-            type: Object
+const props = defineProps({
+    userProfile: {
+        type: Object
+    },
+});
+
+// Create the form data object with all profile fields
+const form = useForm({
+    university: props.userProfile?.university || '',
+    area: props.userProfile?.area || '',
+    city: props.userProfile?.city || '',
+    country: props.userProfile?.country || '',
+    hobbies: props.userProfile?.hobbies || '',
+    occupation: props.userProfile?.occupation || '',
+    age: props.userProfile?.age || '',
+    education: props.userProfile?.education || '',
+    language: props.userProfile?.language || '',
+    skills: props.userProfile?.skills || '',
+    gender: props.userProfile?.gender || '',
+    image: null,
+    _method: props.userProfile ? 'PUT' : 'POST',
+});
+
+
+// Handle form submission
+const submitForm = () => {
+    const response = {
+        onSuccess: () => {
+            alert('Profile saved successfully!');
         },
-    });
-
-    // Create the form data object with all profile fields
-    const form = useForm({
-        university: props.userProfile?.university || '',
-        area: props.userProfile?.area || '',
-        city: props.userProfile?.city || '',
-        country: props.userProfile?.country || '',
-        hobbies: props.userProfile?.hobbies || '',
-        occupation: props.userProfile?.occupation || '',
-        age: props.userProfile?.age || '',
-        education: props.userProfile?.education || '',
-        language: props.userProfile?.language || '',
-        skills: props.userProfile?.skills || '',
-        gender: props.userProfile?.gender || '',
-        image: null,
-    });
-
-    // Add a method to handle image selection
-    const imageInput = ref(null);
-
-    // Handle form submission
-    const submitForm = () => {
-        const method = props.userProfile ? 'put' : 'post';
-        const routeName = props.userProfile ?
-            route('profile.save', props.userProfile.id) :
-            route('profile.save');
-
-        form[method](routeName, {
-            onSuccess: () => {
-                alert('Profile saved successfully!');
-            },
-            onError: (errors) => {
-                console.error(errors);
-                alert('An error occurred. Please check your input.');
-            },
-            onFinish: () => {
-                console.log('Request finished');
-            },
-        });
+        onError: (errors) => {
+            console.error(errors);
+        },
+        onFinish: () => {
+            console.log('Request finished');
+        },
     };
+
+    if (props.userProfile) {
+        router.post(
+            route('profile.save', props.userProfile.id),
+            form,
+            {
+                forceFormData: true,
+                ...response, // Pass the response object to handle Inertia callbacks
+            }
+        );
+    } else {
+        router.post(
+            route('profile.save'),
+            form,
+            {
+                forceFormData: true,
+                ...response, // Pass the response object to handle Inertia callbacks
+            }
+        );
+    }
+};
+
+
 </script>
 
 <template>
@@ -70,7 +88,6 @@
 
         <form @submit.prevent="submitForm" class="mt-6 space-y-6">
             <!-- University Field -->
-            <input type="hidden" name="_method" :value="userProfile ? 'PUT' : 'POST'">
             <div>
                 <InputLabel for="university" value="University" />
                 <TextInput id="university" type="text" class="mt-1 block w-full" v-model="form.university" required
@@ -163,8 +180,7 @@
             <!-- Image Field -->
             <div>
                 <InputLabel for="image" value="Profile Image" />
-                <input type="file" ref="imageInput" id="image" class="mt-1 block w-full"
-                    @change="form.image = imageInput.value.files[0]" />
+                <input type="file" id="image" class="mt-1 block w-full" @input="form.image = $event.target.files[0]" />
                 <InputError class="mt-2" :message="form.errors.image" />
             </div>
 
